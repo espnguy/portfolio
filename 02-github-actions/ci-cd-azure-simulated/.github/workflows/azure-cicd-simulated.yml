@@ -1,0 +1,64 @@
+name: Azure CI/CD Pipeline (Simulated)
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build-test:
+    name: CI - Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+
+    - name: Install dependencies
+      run: pip install -r 02-github-actions/ci-cd-azure-simulated/app/requirements.txt
+
+    - name: Run tests
+      run: pytest 02-github-actions/ci-cd-azure-simulated/tests -q
+
+    - name: Build Docker image
+      run: docker build -t simulated-app ./02-github-actions/ci-cd-azure-simulated
+
+    - name: Save Docker image artifact
+      run: docker save simulated-app | gzip > simulated-app.tar.gz
+
+    - name: Upload Docker image artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: simulated-container-image
+        path: simulated-app.tar.gz
+
+  deploy-simulated:
+    name: CD - Simulated Deploy to Azure
+    needs: build-test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: simulated-container-image
+
+    - name: Extract Docker image
+      run: gunzip -c simulated-app.tar.gz > simulated-app.tar
+
+    - name: Simulate Azure Deployment
+      run: |
+        echo "--------------------------------------------"
+        echo "SIMULATION ONLY: No Azure resources created."
+        echo "Would deploy image: simulated-app:latest"
+        echo "Would push to ACR: <acr-name>.azurecr.io/simulated-app:latest"
+        echo "Would restart Web App: <webapp-name>"
+        echo "This is for portfolio demonstration only."
+        echo "--------------------------------------------"
