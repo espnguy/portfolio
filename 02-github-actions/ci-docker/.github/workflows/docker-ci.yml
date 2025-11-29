@@ -1,0 +1,38 @@
+name: Docker CI Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-test-docker:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+
+    - name: Install Python dependencies
+      run: pip install -r 02-github-actions/ci-docker/app/requirements.txt
+
+    - name: Run tests
+      run: pytest 02-github-actions/ci-docker/tests -q
+
+    - name: Build Docker image
+      run: docker build -t ci-docker-app ./02-github-actions/ci-docker
+
+    - name: Save Docker image as artifact
+      run: docker save ci-docker-app | gzip > ci-docker-app.tar.gz
+
+    - name: Upload Docker artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ci-docker-image
+        path: ci-docker-app.tar.gz
