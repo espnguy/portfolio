@@ -1,0 +1,20 @@
+replicaCount: 2
+
+image:
+  repository: yourdockeruser/flask-web
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 5000
+
+ingress:
+  enabled: false
+  className: ""
+  hosts:
+    - host: flask.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
